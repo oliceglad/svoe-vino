@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Своё Вино</title>
+<meta name="theme-color" content="#7a1f3d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prata&family=Golos+Text:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#faf8f8; --card:#ffffff; --soft:#f2eeef; --line:#e8e1e3;
+  --fg:#1f1a1c; --muted:#857a7e; --accent:#7a1f3d; --on-accent:#fff; --accent-soft:#f5e6eb;
+  --ok:#2f6b3a; --ok-soft:#e6f1e7; --bad:#a3262a; --bad-soft:#fae6e6; --warn:#8a5a00; --warn-soft:#fbf0dc;
+  --f:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --f-logo:"Prata",Georgia,serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#141113; --card:#1c181a; --soft:#252023; --line:#2f292c;
+  --fg:#f2ecee; --muted:#9d9195; --accent:#e07a9a; --on-accent:#1a0e12; --accent-soft:#35202a;
+  --ok:#8fcf98; --ok-soft:#1d2b1f; --bad:#f19a9a; --bad-soft:#371c1e; --warn:#f0bd68; --warn-soft:#352914; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--f);-webkit-font-smoothing:antialiased;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px))}
+.logo{font-family:var(--f-logo);font-size:21px;color:var(--accent);text-decoration:none;white-space:nowrap}
+.tabs{display:flex;gap:2px;background:var(--soft);padding:3px;border-radius:12px;overflow-x:auto}
+.tabs a{padding:6px 14px;border-radius:9px;color:var(--muted);text-decoration:none;font-weight:500;font-size:14px;white-space:nowrap}
+.tabs a.on{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.page{max-width:1080px;margin:0 auto;padding:24px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px))}
+.btn{border:1px solid var(--line);background:var(--card);padding:9px 16px;border-radius:10px;font-weight:500;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.p{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.s{padding:5px 11px;font-size:13px;border-radius:8px}
+.btn.t{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.t:hover{color:var(--fg)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sp{justify-content:space-between}
+.col{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--muted)}
+.sm{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;min-width:0}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;background:var(--soft);font-size:12.5px;white-space:nowrap}
+.pill.a{background:var(--accent-soft);color:var(--accent)}.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.c-red{background:#8a2442}.c-white{background:#e2d27a}.c-rose{background:#eba5b6}.c-spark{background:#ecdfa9}.c-dessert{background:#c78a2e}
+h1{font-size:22px;font-weight:600;margin:0;letter-spacing:-.01em}
+h2{font-size:16px;font-weight:600;margin:0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;font-weight:500;color:var(--muted)}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:30;max-width:90vw}
+
+/* chat */
+.chat{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px;height:calc(100vh - 140px);min-height:520px}
+@media (max-width:860px){.chat{grid-template-columns:1fr;height:calc(100vh - 120px)}.side{display:none}}
+.conv{display:flex;flex-direction:column;min-height:0;min-width:0}
+.log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:4px 2px 16px}
+.m{max-width:min(620px,92%);line-height:1.5}
+.m.u{align-self:flex-end;background:var(--accent);color:var(--on-accent);padding:9px 14px;border-radius:16px 16px 4px 16px}
+.m.b{align-self:flex-start}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:13.5px}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.compose{display:flex;gap:8px;padding:10px;background:var(--card);border:1px solid var(--line);border-radius:16px}
+.compose input{border:0;padding:8px 6px;background:transparent}
+.wines{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.w{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.w .h{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.w .nm{font-weight:600;font-size:15.5px}
+.w .pr{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.w .meta{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.w .why{font-size:14px}
+.w .act{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.w .act .btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.side{display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+.lbl{font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between}
+input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--accent)}
+
+/* events */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.ev{cursor:pointer;display:flex;flex-direction:column;gap:8px;text-align:left;font:inherit;color:inherit}
+.ev:hover{border-color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.two{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.seg{display:flex;background:var(--soft);padding:3px;border-radius:10px;gap:2px}
+.seg button{flex:1;border:0;background:transparent;padding:7px 10px;border-radius:8px;font-size:13.5px;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.pick{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+.pick label{display:flex;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer}
+.pick label:last-child{border:0}
+.pick input{width:auto;accent-color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:600px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat b{display:block;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--muted)}
+.qr{background:#fff;padding:12px;border-radius:12px;line-height:0;display:inline-block;border:1px solid var(--line)}
+.bar{height:6px;border-radius:3px;background:var(--soft);overflow:hidden;min-width:60px;flex:1}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+pre{background:var(--soft);border-radius:10px;padding:12px;overflow:auto;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;max-height:320px;margin:0}
+details summary{cursor:pointer;font-weight:500}
+
+/* guest */
+.guest{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.smp{display:flex;flex-direction:column;gap:12px}
+.cr{display:grid;grid-template-columns:100px 1fr 30px;gap:10px;align-items:center;font-size:13.5px}
+.cr output{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.stars{display:flex;gap:6px}
+.stars button{border:1px solid var(--line);background:var(--card);width:40px;height:40px;border-radius:10px;font-size:15px;font-weight:600}
+.stars button.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.test{display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top" id="top"><div class="in">
+  <a class="logo" href="#chat">Своё Вино</a>
+  <nav class="tabs" id="nav">
+    <a href="#chat" data-v="chat">Сомелье</a>
+    <a href="#saved" data-v="saved">Мои вина</a>
+    <a href="#events" data-v="events">Дегустации</a>
+  </nav>
+</div></header>
+
+<main class="page">
+
+<section id="v-chat" class="chat">
+  <div class="conv">
+    <div class="log" id="log" aria-live="polite"></div>
+    <form class="compose" id="composer"><input id="q" autocomplete="off" placeholder="Вино к утке до 3000 ₽, подарок, игристое из Крыма…"><button class="btn p" type="submit">Найти</button></form>
+  </div>
+  <aside class="side" id="sideTaste"></aside>
+</section>
+
+<section id="v-saved" class="col" hidden>
+  <div class="two">
+    <div class="col"><h1>Мои вина</h1><div id="savedList" class="col"></div></div>
+    <div class="card col" id="tasteCard"></div>
+  </div>
+</section>
+
+<section id="v-events" class="col" hidden>
+  <div class="row sp"><h1>Дегустации</h1><a class="btn p" href="#new" style="text-decoration:none">Новая дегустация</a></div>
+  <div class="grid" id="evList"></div>
+</section>
+
+<section id="v-new" hidden>
+  <form id="evForm" class="two">
+    <div class="card col">
+      <h1>Новая дегустация</h1>
+      <label class="field">Название<input id="ev-name" value="Автохтоны Дона и Крыма"></label>
+      <div class="row" style="flex-wrap:nowrap">
+        <label class="field" style="flex:2">Дата<input id="ev-date" type="datetime-local" value="2026-11-14T19:00"></label>
+        <label class="field" style="flex:1">Мест<input id="ev-cap" type="number" min="2" max="500" value="24"></label>
+      </div>
+      <div class="field">Формат<div class="seg" id="ev-mode"><button type="button" data-val="blind" class="on">Слепая</button><button type="button" data-val="open">Открытая</button></div></div>
+      <div class="field">Шкала<div class="seg" id="ev-scale"><button type="button" data-val="criteria" class="on">Критерии · 100</button><button type="button" data-val="stars">5 звёзд</button><button type="button" data-val="ten">10 баллов</button></div></div>
+      <div class="field" id="critBox">Критерии и вес
+        <div class="col" id="critEdit" style="gap:6px"></div>
+      </div>
+      <div class="field">Вина
+        <div class="chips" id="ev-theme" style="margin:0"><button type="button" class="chip on" data-t="auto">Автохтоны</button><button type="button" class="chip" data-t="red">Красные</button><button type="button" class="chip" data-t="spark">Игристые</button><button type="button" class="chip" data-t="none">Очистить</button></div>
+        <input id="ev-search" placeholder="Поиск по каталогу">
+        <div class="pick" id="ev-wines"></div>
+      </div>
+    </div>
+    <div class="col" style="position:sticky;top:76px">
+      <div class="card col"><div class="row sp"><h2>Программа</h2><span class="muted sm" id="ev-count"></span></div><div id="ev-program"></div></div>
+      <button class="btn p" type="submit" style="padding:12px">Опубликовать и получить QR</button>
+    </div>
+  </form>
+</section>
+
+<section id="v-event" class="col" hidden></section>
+
+<section id="v-guest" hidden><div class="guest" id="guestApp"></div></section>
+
+<section id="v-tests" class="col" hidden>
+  <div class="row sp"><h1>Проверка качества <span class="muted" id="k-tests" style="font-weight:400"></span></h1><button class="btn" id="runTests">Запустить</button></div>
+  <div class="card"><div id="testOut"></div></div>
+</section>
+
+</main>
+<script>
+/* ============ CATALOG (demo slice in Своё Вино feed format) ============ */
+const CATALOG = [
+ {sku:"SV-0001",name:"Красностоп Золотовский",producer:"Вина Арпачина",region:"Дон",grape:["Красностоп Золотовский"],color:"red",sweet:0,body:5,acid:4,price:2900,stock:true,pair:["мясо","дичь","сыр"],occ:["подарок","ужин"],auto:true,desc:"плотное, ежевика, специи, крепкие танины"},
+ {sku:"SV-0002",name:"Цимлянский чёрный",producer:"Цимлянские вина",region:"Дон",grape:["Цимлянский чёрный"],color:"red",sweet:0,body:4,acid:3,price:1400,stock:true,pair:["мясо","утка","грибы"],occ:["ужин","друзья"],auto:true,desc:"вишня, лесные травы, мягкие танины"},
+ {sku:"SV-0003",name:"Сибирьковый",producer:"Пухляковская винодельня",region:"Дон",grape:["Сибирьковый"],color:"white",sweet:0,body:2,acid:4,price:1100,stock:true,pair:["рыба","овощи","морепродукты"],occ:["лето","друзья"],auto:true,desc:"зелёное яблоко, полевые травы, свежесть"},
+ {sku:"SV-0004",name:"Кокур полусладкий",producer:"Солнечная Долина",region:"Крым",grape:["Кокур"],color:"white",sweet:2,body:3,acid:3,price:900,stock:true,pair:["десерт","сыр","фрукты"],occ:["друзья"],auto:true,desc:"айва, мёд, лёгкая сладость"},
+ {sku:"SV-0005",name:"Кефесия",producer:"Бельбек",region:"Крым",grape:["Кефесия"],color:"white",sweet:0,body:3,acid:3,price:1600,stock:true,pair:["рыба","птица","сыр"],occ:["ужин","свидание"],auto:true,desc:"белые цветы, груша, солоноватое послевкусие"},
+ {sku:"SV-0006",name:"Каберне Совиньон Семейный Резерв",producer:"Имение Сикоры",region:"Кубань",grape:["Каберне Совиньон"],color:"red",sweet:0,body:5,acid:3,price:4500,stock:true,pair:["мясо","дичь"],occ:["подарок","праздник"],auto:false,desc:"чёрная смородина, кедр, долгая выдержка"},
+ {sku:"SV-0007",name:"Пино Нуар",producer:"Имение Сикоры",region:"Кубань",grape:["Пино Нуар"],color:"red",sweet:0,body:3,acid:4,price:3200,stock:true,pair:["утка","птица","грибы","рыба"],occ:["свидание","подарок"],auto:false,desc:"красные ягоды, лесная подстилка, шелковистое"},
+ {sku:"SV-0008",name:"Каберне Фран",producer:"Скалистый берег",region:"Кубань",grape:["Каберне Фран"],color:"red",sweet:0,body:4,acid:4,price:2600,stock:true,pair:["мясо","овощи","пицца"],occ:["ужин","друзья"],auto:false,desc:"малина, болгарский перец, графит"},
+ {sku:"SV-0009",name:"Брют классический",producer:"Абрау-Дюрсо",region:"Кубань",grape:["Шардоне","Пино Нуар"],color:"spark",sweet:0,body:2,acid:5,price:1300,stock:true,pair:["морепродукты","рыба","закуски"],occ:["праздник","новый год","свадьба"],auto:false,desc:"бриошь, цитрус, тонкий перляж"},
+ {sku:"SV-0010",name:"Brut Nature",producer:"Усадьба Дивноморское",region:"Кубань",grape:["Шардоне","Пино Нуар"],color:"spark",sweet:0,body:3,acid:5,price:3800,stock:true,pair:["морепродукты","устрицы","закуски"],occ:["подарок","праздник","новый год","свадьба"],auto:false,desc:"выдержка на осадке, миндаль, минеральность"},
+ {sku:"SV-0011",name:"Шардоне",producer:"Лефкадия",region:"Кубань",grape:["Шардоне"],color:"white",sweet:0,body:4,acid:3,price:1700,stock:true,pair:["птица","рыба","паста","сыр"],occ:["ужин","свидание"],auto:false,desc:"спелая груша, ваниль, сливочная текстура"},
+ {sku:"SV-0012",name:"Рислинг",producer:"Фанагория",region:"Тамань",grape:["Рислинг"],color:"white",sweet:0,body:2,acid:5,price:1100,stock:true,pair:["морепродукты","азиатская","рыба"],occ:["лето","друзья"],auto:false,desc:"лайм, зелёное яблоко, высокая кислотность"},
+ {sku:"SV-0013",name:"Алиготе",producer:"Винодельня Узунов",region:"Тамань",grape:["Алиготе"],color:"white",sweet:0,body:2,acid:4,price:1300,stock:true,pair:["рыба","морепродукты","овощи"],occ:["лето","свидание"],auto:false,desc:"лимонная цедра, фенхель, морская свежесть"},
+ {sku:"SV-0014",name:"Саперави",producer:"Гай-Кодзор",region:"Кубань",grape:["Саперави"],color:"red",sweet:0,body:5,acid:4,price:1900,stock:true,pair:["мясо","шашлык","сыр"],occ:["друзья","ужин"],auto:false,desc:"слива, тёмный шоколад, насыщенный цвет"},
+ {sku:"SV-0015",name:"Мерло «Высокий Берег»",producer:"Кубань-Вино",region:"Тамань",grape:["Мерло"],color:"red",sweet:0,body:3,acid:3,price:1000,stock:true,pair:["мясо","паста","пицца","шашлык"],occ:["друзья","ужин"],auto:false,desc:"спелая вишня, мягкие танины"},
+ {sku:"SV-0016",name:"Сира «Лимитированная серия»",producer:"Усадьба Перовских",region:"Крым",grape:["Сира"],color:"red",sweet:0,body:4,acid:3,price:1600,stock:true,pair:["мясо","шашлык","дичь"],occ:["ужин","подарок"],auto:false,desc:"чёрный перец, ежевика, копчёность"},
+ {sku:"SV-0017",name:"«Чёрное из чёрного»",producer:"Мысхако",region:"Кубань",grape:["Каберне Совиньон","Мерло"],color:"red",sweet:0,body:4,acid:3,price:650,stock:true,pair:["мясо","шашлык","пицца"],occ:["друзья"],auto:false,desc:"тёмные ягоды, простое и сочное"},
+ {sku:"SV-0018",name:"«Эссе»",producer:"Сатера",region:"Крым",grape:["Каберне Совиньон"],color:"red",sweet:0,body:4,acid:3,price:800,stock:true,pair:["мясо","паста"],occ:["ужин"],auto:false,desc:"чернослив, табак, средние танины"},
+ {sku:"SV-0019",name:"«Винный клуб»",producer:"Бельбек",region:"Крым",grape:["Каберне Совиньон","Мерло"],color:"red",sweet:0,body:4,acid:3,price:1100,stock:true,pair:["мясо","сыр"],occ:["ужин","друзья"],auto:false,desc:"смородина, кедр, сбалансированное"},
+ {sku:"SV-0020",name:"Розе",producer:"Галицкий и Галицкий",region:"Кубань",grape:["Пино Нуар"],color:"rose",sweet:0,body:2,acid:4,price:1500,stock:true,pair:["рыба","овощи","закуски","азиатская"],occ:["лето","свидание","друзья"],auto:false,desc:"клубника, грейпфрут, сухое"},
+ {sku:"SV-0021",name:"Мускат белый",producer:"Массандра",region:"Крым",grape:["Мускат белый"],color:"dessert",sweet:3,body:4,acid:2,price:1600,stock:true,pair:["десерт","сыр","фрукты"],occ:["подарок","праздник"],auto:false,desc:"чайная роза, абрикос, мёд"},
+ {sku:"SV-0022",name:"Совиньон Блан",producer:"Бурлюк",region:"Крым",grape:["Совиньон Блан"],color:"white",sweet:0,body:2,acid:5,price:1400,stock:true,pair:["овощи","сыр","рыба"],occ:["лето"],auto:false,desc:"крыжовник, свежескошенная трава"},
+ {sku:"SV-0023",name:"Пино Нуар Резерв",producer:"Шато де Талю",region:"Кубань",grape:["Пино Нуар"],color:"red",sweet:0,body:3,acid:4,price:2800,stock:false,pair:["утка","птица","грибы"],occ:["подарок","свидание"],auto:false,desc:"вишня, гвоздика (нет в наличии)"},
+ {sku:"SV-0024",name:"Шардоне Резерв",producer:"Шато де Талю",region:"Кубань",grape:["Шардоне"],color:"white",sweet:0,body:4,acid:3,price:2400,stock:true,pair:["рыба","птица","паста"],occ:["подарок","ужин"],auto:false,desc:"печёное яблоко, обжаренный орех"}
+];
+const BY_SKU = Object.fromEntries(CATALOG.map(w=>[w.sku,w]));
+const COLOR_RU = {red:"красное",white:"белое",rose:"розовое",spark:"игристое",dessert:"десертное"};
+const SWEET_RU = ["сухое","полусухое","полусладкое","сладкое"];
+const rub = n => n.toLocaleString("ru-RU")+" ₽";
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ============ NLU: slot extraction ============ */
+const DISH = [
+ [/стейк|говядин|мяс|рибай|бургер|котлет/,"мясо"],[/шашлык|гриль|барбекю|мангал/,"шашлык"],[/баранин|дичь|оленин|кабан/,"дичь"],
+ [/утк|утин/,"утка"],[/куриц|птиц|индейк|цыпл/,"птица"],[/рыб|лосос|форел|судак|сибас|дорадо/,"рыба"],
+ [/морепрод|креветк|мидии|кальмар|роллы|суши/,"морепродукты"],[/устриц/,"устрицы"],[/сыр/,"сыр"],[/паст|спагетти|ризотто/,"паста"],
+ [/пицц/,"пицца"],[/десерт|торт|пирог|сладк[оеи]е? к|шоколад/,"десерт"],[/овощ|салат|вегетар/,"овощи"],[/гриб/,"грибы"],
+ [/азиат|тайск|китайск|остр/,"азиатская"],[/закуск|канапе|фуршет/,"закуски"],[/фрукт/,"фрукты"]];
+const OCC = [[/подар/,"подарок"],[/свидан|романт/,"свидание"],[/новый год|нг\b/,"новый год"],[/свадьб/,"свадьба"],[/праздн|день рожд|юбилей|корпоратив/,"праздник"],[/друз|вечерин|компани/,"друзья"],[/ужин/,"ужин"],[/лет|пикник|жар/,"лето"]];
+const REG = [[/крым|севастоп/,"Крым"],[/кубан|краснодар/,"Кубань"],[/тамань|таман/,"Тамань"],[/дон\b|донск|ростов/,"Дон"]];
+function grapeIn(t){const all=[...new Set(CATALOG.flatMap(w=>w.grape))];
+  const stems=g=>g.toLowerCase().split(/\s+/).map(x=>x.slice(0,Math.max(5,x.length-2)));
+  const first=g=>stems(g)[0];
+  const unique=g=>all.filter(x=>first(x)===first(g)).length===1;
+  return all.filter(g=>stems(g).every(s=>t.includes(s)) || (unique(g)&&t.includes(first(g))) || (g==="Каберне Совиньон"&&/каберне/.test(t)&&!/фран/.test(t)) );}
+function parse(text, prev={}){
+  const t=" "+text.toLowerCase().replace(/ё/g,"е")+" ";
+  const s={...prev};
+  for(const [re,v] of DISH) if(re.test(t)) s.dish=v;
+  for(const [re,v] of OCC) if(re.test(t)) s.occ=v;
+  for(const [re,v] of REG) if(re.test(t)) s.region=v;
+  const g=grapeIn(t); if(g.length) s.grape=g[0];
+  if(/игрист|шампан|брют|пузыр/.test(t)) s.color="spark";
+  else if(/красн/.test(t)) s.color="red"; else if(/бел(ое|ого|ое)|\bбелое|бело/.test(t)) s.color="white";
+  else if(/розов|розе/.test(t)) s.color="rose"; else if(/десертн|мускат/.test(t)) s.color="dessert";
+  if(/полусладк/.test(t)) s.sweet=2; else if(/полусух/.test(t)) s.sweet=1; else if(/\bсладк/.test(t)&&!/десерт/.test(t)) s.sweet=3; else if(/\bсух/.test(t)) s.sweet=0;
+  if(/легк|свеж/.test(t)) s.bodyPref=2; if(/насыщ|плотн|мощн|танин/.test(t)) s.bodyPref=5;
+  if(/автохтон|местн(ые|ый) сорт/.test(t)) s.auto=true;
+  // budget
+  const num=t.replace(/(\d)\s+(\d{3})/g,"$1$2"); let m;
+  if((m=num.match(/(\d+)\s*(?:-|–|до)\s*(\d+)\s*(?:к|тыс)/))) {s.min=+m[1]*1000;s.max=+m[2]*1000;}
+  else if((m=num.match(/(?:от)\s*(\d{3,5})\s*(?:до)\s*(\d{3,5})/))) {s.min=+m[1];s.max=+m[2];}
+  else if((m=num.match(/(?:до|не дороже|дешевле|максимум|бюджет)\s*(\d+(?:[.,]\d)?)\s*(к|тыс)?/))) {s.max=Math.round(parseFloat(m[1].replace(",","."))*(m[2]?1000:1));}
+  else if((m=num.match(/(?:от|дороже)\s*(\d+)\s*(к|тыс)?/))) {s.min=+m[1]*(m[2]?1000:1);}
+  else if((m=num.match(/(\d{3,5})\s*(?:₽|р\b|руб)/))) {s.max=+m[1];}
+  if(/недорог|бюджетн|дешев/.test(t)&&!s.max) s.max=1200;
+  if(/не важно|любой бюджет|без разниц/.test(t)) {s.max=null;s.budgetAsked=true;}
+  return s;
+}
+
+/* ============ PROFILE ============ */
+const store={get(k,d){try{const v=localStorage.getItem("sv."+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("sv."+k,JSON.stringify(v))}catch(e){}}};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const DEF_PROFILE={body:3,sweet:0,acid:3,likes:{},dislikes:[],saved:[]};
+let profile=store.get("profile",clone(DEF_PROFILE));
+
+/* ============ RETRIEVAL + RANKING ============ */
+function retrieve(s, prof=profile, cat=CATALOG){
+  let pool=cat.filter(w=>w.stock);
+  const applied=[];
+  if(s.max){pool=pool.filter(w=>w.price<=s.max);applied.push("цена ≤ "+rub(s.max));}
+  if(s.min){pool=pool.filter(w=>w.price>=s.min);applied.push("цена ≥ "+rub(s.min));}
+  if(s.region){pool=pool.filter(w=>w.region===s.region);applied.push("регион: "+s.region);}
+  if(s.grape){pool=pool.filter(w=>w.grape.includes(s.grape));applied.push("сорт: "+s.grape);}
+  if(s.color){pool=pool.filter(w=>w.color===s.color);applied.push(COLOR_RU[s.color]);}
+  if(s.sweet!=null){pool=pool.filter(w=>w.sweet===s.sweet);applied.push(SWEET_RU[s.sweet]);}
+  if(s.auto){pool=pool.filter(w=>w.auto);applied.push("автохтонные сорта");}
+  pool=pool.filter(w=>!prof.dislikes.includes(w.sku));
+  const scored=pool.map(w=>{let sc=0;const why=[];
+    if(s.dish){ if(w.pair.includes(s.dish)){sc+=40;why.push(`классическая пара к блюду «${s.dish}»`);}
+      else if(s.dish==="шашлык"&&w.pair.includes("мясо")){sc+=30;why.push("подходит к мясу на огне");}
+      else if(s.dish==="дичь"&&w.pair.includes("мясо")){sc+=20;why.push("выдержит насыщенное мясо");}
+      else sc-=25; }
+    if(s.occ){ if(w.occ.includes(s.occ)){sc+=25;why.push(`уместно для повода «${s.occ}»`);} }
+    if(s.occ==="подарок"){sc+=Math.min(w.price/250,16); if(w.price>=2000) why.push("подарочный уровень по цене и выдержке");}
+    const bp=s.bodyPref??prof.body; sc-=Math.abs(w.body-bp)*5;
+    if(s.bodyPref) why.push(s.bodyPref<=2?"лёгкое и свежее, как вы просили":"насыщенное, как вы просили");
+    sc-=Math.abs(w.acid-prof.acid)*2;
+    for(const g of w.grape){const l=prof.likes["g:"+g]||0; if(l){sc+=l*8; why.push(`вам нравился сорт ${g}`);}}
+    const lr=prof.likes["r:"+w.region]||0; if(lr){sc+=lr*4;}
+    if(s.max) sc+= (w.price/s.max)*6; // use the budget well
+    if(prof.saved.includes(w.sku)) sc-=6; // novelty
+    return {w,sc,why};
+  }).sort((a,b)=>b.sc-a.sc);
+  return {items:scored,applied};
+}
+
+/* "LLM" layer: returns {sku, reason}. Guard validates against retrieved set. */
+function llmSelect(results,k=3){return results.items.slice(0,k).map(r=>({sku:r.w.sku,reason:r.why}));}
+function guard(proposals, results){
+  const allowed=new Set(results.items.map(r=>r.w.sku)); const ok=[],rejected=[];
+  for(const p of proposals){ if(allowed.has(p.sku)&&BY_SKU[p.sku]) ok.push(p); else rejected.push(p); }
+  return {ok,rejected};
+}
+
+/* dialogue policy: which question to ask */
+function nextQuestion(s){
+  const hasIntent=s.dish||s.occ||s.color||s.grape||s.region||s.bodyPref||s.auto;
+  if(!hasIntent) return {key:"intent",text:"Подскажите, для чего вино?",chips:["К ужину с мясом","К рыбе","В подарок","На праздник","Просто вкусное красное","Удивите меня автохтоном"]};
+  if(s.occ==="подарок"&&!s.max&&!s.budgetAsked) return {key:"budget",text:"Какой бюджет на подарок?",chips:["до 1500 ₽","до 3000 ₽","до 5000 ₽","не важно"]};
+  if(s.occ==="подарок"&&!s.color&&!s.giftAsked) return {key:"giftcolor",text:"Что любит получатель?",chips:["Красное","Белое","Игристое","Не знаю"]};
+  if(!s.dish&&!s.color&&!s.occ&&!s.max&&!s.budgetAsked) return {key:"budget",text:"Есть ограничение по бюджету?",chips:["до 1000 ₽","до 2000 ₽","до 3500 ₽","не важно"]};
+  return null;
+}
+
+
+/* ================= TASTINGS: domain ================= */
+const DEVICE = store.get("device",null) || (()=>{const d="dev-"+Math.random().toString(36).slice(2,10);store.set("device",d);return d})();
+let EVENTS = store.get("events",{});
+let CUR = store.get("cur",null);
+function saveEvents(){store.set("events",EVENTS);}
+function code(){const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let c;do{c=Array.from({length:6},()=>a[Math.floor(Math.random()*a.length)]).join("")}while(EVENTS[c]);return c;}
+const ORDER={spark:0,white:1,rose:2,red:3,dessert:4};
+function buildProgram(skus){return [...skus].map(s=>BY_SKU[s]).sort((a,b)=>ORDER[a.color]-ORDER[b.color]||a.body-b.body||a.sweet-b.sweet).map(w=>w.sku);}
+function themePick(t){if(t==="auto")return CATALOG.filter(w=>w.auto&&w.stock).slice(0,5).map(w=>w.sku);
+  if(t==="red")return CATALOG.filter(w=>w.color==="red"&&w.stock).slice(0,6).map(w=>w.sku);
+  if(t==="spark")return CATALOG.filter(w=>w.color==="spark"&&w.stock).map(w=>w.sku); return [];}
+const SCALES={criteria:{name:"Критерии · 100",crit:[["look","Внешний вид",10],["nose","Аромат",30],["palate","Вкус",40],["finish","Послевкусие",20]]},
+  stars:{name:"5 звёзд",crit:[["overall","Оценка",5]]},ten:{name:"10 баллов",crit:[["overall","Оценка",10]]}};
+const critOf=ev=>ev.crit||SCALES[ev.scale].crit;
+function createEvent(o){const c=code();const ev={code:c,title:o.title,date:o.date,cap:o.cap,mode:o.mode,scale:o.scale,crit:o.crit||null,program:buildProgram(o.skus),status:"live",revealed:o.mode==="open",published:false,tokens:{},votes:[],rejected:[],created:Date.now()};EVENTS[c]=ev;return ev;}
+function score100(ev,scores){const cr=critOf(ev);const max=cr.reduce((a,c)=>a+c[2],0);const got=cr.reduce((a,c)=>a+(+scores[c[0]]||0),0);return Math.round(got/max*1000)/10;}
+function issueToken(ev,device,nick){
+  const ex=Object.entries(ev.tokens).find(([t,v])=>v.device===device); if(ex) return ex[0];
+  if(Object.keys(ev.tokens).length>=ev.cap) throw new Error("Все места заняты");
+  const t="tk-"+Math.random().toString(36).slice(2,12); ev.tokens[t]={device,nick,joined:Date.now()}; return t;}
+function castVote(ev,token,sku,scores,note,elapsedSec){
+  const reason=[];
+  if(ev.status!=="live") reason.push("приём оценок закрыт");
+  if(!ev.tokens[token]) reason.push("неизвестный участник");
+  if(!ev.program.includes(sku)) reason.push("вина нет в программе");
+  if(ev.votes.some(v=>v.token===token&&v.sku===sku)) reason.push("повторная оценка");
+  if(elapsedSec<20) reason.push("меньше 20 с на образец");
+  for(const c of critOf(ev)){const v=+scores[c[0]]; if(!(v>=0&&v<=c[2])) reason.push("вне шкалы: "+c[1]);}
+  const rec={token,sku,scores,note:note||"",ts:Date.now(),score:score100(ev,scores)};
+  if(reason.length){ev.rejected.push({...rec,reason});return {ok:false,reason};}
+  ev.votes.push(rec);return {ok:true};}
+function straightLiners(ev){const by={};ev.votes.forEach(v=>{(by[v.token]=by[v.token]||[]).push(v.score)});
+  return Object.entries(by).filter(([t,a])=>a.length>=3&&new Set(a).size===1&&(a[0]===100||a[0]===0)).map(([t])=>t);}
+function validVotes(ev){const bad=new Set(straightLiners(ev));return ev.votes.filter(v=>!bad.has(v.token));}
+function joinUrl(c){return location.href.split("#")[0]+"#join-"+c;}
+
+function simulate(ev,n=12,seed=7){let x=seed;const rnd=()=>{x=(x*16807)%2147483647;return (x-1)/2147483646;};
+  const cr=critOf(ev);const full=Object.fromEntries(cr.map(c=>[c[0],c[2]]));const zero=Object.fromEntries(cr.map(c=>[c[0],0]));
+  const base={};ev.program.forEach(s=>{const w=BY_SKU[s];base[s]=0.55+w.price/12000+(w.auto?0.06:0);});
+  const notes=["яркий аромат","хочу купить","танины жестковаты","свежо и сочно","",""];
+  for(let i=0;i<n;i++){let tok;try{tok=issueToken(ev,"sim-"+seed+"-"+i,"Гость "+(i+1));}catch(e){break;}
+    ev.program.forEach(s=>{const sc={};cr.forEach(c=>{sc[c[0]]=Math.max(0,Math.min(c[2],Math.round(c[2]*(base[s]+(rnd()-.5)*0.3))));});
+      castVote(ev,tok,s,i===n-1?full:sc,notes[Math.floor(rnd()*notes.length)],25+rnd()*90);});
+    if(i<2) castVote(ev,tok,ev.program[0],full,"",40);
+    if(i===2) castVote(ev,tok,ev.program[1],zero,"",4);
+  }
+  castVote(ev,"tk-forged",ev.program[0],full,"",60);
+}
+function summary(ev){const vv=validVotes(ev);const sl=new Set(straightLiners(ev));
+  const rows=ev.program.map((sku,i)=>{const a=vv.filter(v=>v.sku===sku).map(v=>v.score);const n=a.length;const avg=n?a.reduce((x,y)=>x+y,0)/n:0;
+    const sd=n>1?Math.sqrt(a.reduce((x,y)=>x+(y-avg)**2,0)/(n-1)):0;return {sku,i,n,avg,sd};});
+  const ranked=[...rows].sort((a,b)=>b.avg-a.avg);ranked.forEach((r,k)=>r.rank=k+1);
+  return {rows,valid:vv,straight:[...sl],rejected:ev.rejected,guests:Object.keys(ev.tokens).length};}
+function hash(t){let x=2166136261;for(const ch of t){x^=ch.charCodeAt(0);x=Math.imul(x,16777619);}return (x>>>0).toString(16).padStart(8,"0");}
+function nvrPayload(ev){const s=summary(ev);
+  const body={schema:"nvr.ratings.v1",source:"svoe-vino.tastings",event:{id:ev.code,title:ev.title,date:ev.date,mode:ev.mode,scale:critOf(ev).map(c=>({key:c[0],label:c[1],max:c[2]})),participants_valid:new Set(s.valid.map(v=>v.token)).size},
+   ratings:s.valid.map(v=>({sku:v.sku,rater_hash:"r_"+hash(ev.code+v.token),score_100:v.score,criteria:v.scores,note:v.note||undefined,rated_at:new Date(v.ts).toISOString(),blind:ev.mode==="blind"}))};
+  body.signature="hmac-sha256:"+hash(JSON.stringify(body.ratings))+hash(ev.code);return body;}
+
+/* ================= UI helpers ================= */
+const $=id=>document.getElementById(id);
+let toastT;function toast(m){let el=document.querySelector(".toast");if(!el){el=document.createElement("div");el.className="toast";el.setAttribute("role","status");document.body.appendChild(el);}el.textContent=m;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2400);}
+function plural(n,a,b,c){n=Math.abs(n)%100;const n1=n%10;if(n>10&&n<20)return c;if(n1>1&&n1<5)return b;if(n1===1)return a;return c;}
+const fmtDate=d=>{if(!d)return"";const x=new Date(d);return isNaN(x)?d:x.toLocaleString("ru-RU",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"});};
+const dot=c=>`<span class="dot c-${c}"></span>`;
+
+/* ================= SOMMELIER UI ================= */
+const log=$("log"); let slots={};
+function bubble(html,who="b"){const d=document.createElement("div");d.className="m "+who;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
+function wineCard(w,reason){const saved=profile.saved.includes(w.sku);
+  return `<div class="w" data-sku="${w.sku}">
+  <div class="h"><span class="nm">${esc(w.name)}</span><span class="pr">${rub(w.price)}</span></div>
+  <div class="meta">${dot(w.color)}<span>${COLOR_RU[w.color]}, ${SWEET_RU[w.sweet]}</span><span>${esc(w.producer)}</span><span>${w.region}</span><span>${w.grape.join(", ")}</span></div>
+  <div class="why">${reason.length?esc(cap(reason.join(", ")))+". ":""}<span class="muted">${esc(cap(w.desc))}.</span></div>
+  <div class="act"><button class="btn s" data-fb="up">Нравится</button><button class="btn s" data-fb="down">Не то</button><button class="btn s ${saved?"on":""}" data-fb="save">${saved?"Сохранено":"Сохранить"}</button><span class="muted sm" style="margin-left:auto;align-self:center">${w.sku} · в наличии</span></div></div>`;}
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+function respond(text){
+  bubble(esc(text),"u");
+  slots=parse(text,slots);
+  const q=nextQuestion(slots);
+  if(q){bubble(esc(q.text)+`<div class="chips">${q.chips.map(c=>`<button class="chip" data-chip="${esc(c)}" data-key="${q.key}">${esc(c)}</button>`).join("")}</div>`);return;}
+  const res=retrieve(slots); const props=llmSelect(res); const {ok}=guard(props,res);
+  if(!ok.length){
+    const relax=[];for(const k of ["max","region","grape","sweet","color"]) if(slots[k]!=null){const s2={...slots};delete s2[k];const n=retrieve(s2).items.length;if(n)relax.push({k,n});}
+    const lbl={max:"Поднять бюджет",region:"Любой регион",grape:"Другой сорт",sweet:"Любая сладость",color:"Любой цвет"};
+    bubble(`Сейчас в наличии нет вина под эти условия${res.applied.length?" ("+esc(res.applied.join(", "))+")":""}.`+(relax.length?`<div class="chips">${relax.map(r=>`<button class="chip" data-relax="${r.k}">${lbl[r.k]} · ${r.n}</button>`).join("")}</div>`:""));return;}
+  bubble(`${ok.length===1?"Подходит одно вино":"Вот что подойдёт"}${res.applied.length?` <span class="muted">· ${esc(res.applied.join(", "))}</span>`:""}<div class="wines">${ok.map(p=>wineCard(BY_SKU[p.sku],p.reason)).join("")}</div><div class="chips"><button class="chip" data-chip="Подешевле">Подешевле</button><button class="chip" data-chip="Что-то полегче">Полегче</button><button class="chip" data-chip="Новый подбор">Сначала</button></div>`);
+}
+log.addEventListener("click",e=>{
+  const c=e.target.closest("[data-chip]");if(c){const v=c.dataset.chip;
+    if(v==="Новый подбор"){slots={};bubble("Хорошо, начнём заново. Что ищем?");return;}
+    if(v==="Подешевле"){const cur=slots.max||Math.max(...retrieve(slots).items.slice(0,3).map(r=>r.w.price),1000);slots.max=Math.round(cur*0.7/100)*100;respond("Подешевле, до "+slots.max+" ₽");return;}
+    if(v==="Что-то полегче"){respond("Что-то лёгкое");return;}
+    if(c.dataset.key==="budget"&&/не важно/.test(v))slots.budgetAsked=true;
+    if(c.dataset.key==="giftcolor")slots.giftAsked=true;
+    respond(v);return;}
+  const r=e.target.closest("[data-relax]");if(r){delete slots[r.dataset.relax];if(r.dataset.relax==="max")slots.budgetAsked=true;respond(r.textContent.replace(/\s*·\s*\d+$/,""));return;}
+  const f=e.target.closest("[data-fb]");if(f)feedback(f.closest("[data-sku]").dataset.sku,f.dataset.fb,f);
+});
+function feedback(sku,kind,btn){const w=BY_SKU[sku];
+  if(kind==="up"){for(const g of w.grape)profile.likes["g:"+g]=(profile.likes["g:"+g]||0)+1;profile.likes["r:"+w.region]=(profile.likes["r:"+w.region]||0)+1;
+    profile.body=Math.round((profile.body*2+w.body)/3);profile.acid=Math.round((profile.acid*2+w.acid)/3);btn.classList.add("on");toast("Буду предлагать похожие");}
+  if(kind==="down"){if(!profile.dislikes.includes(sku))profile.dislikes.push(sku);btn.closest(".w").style.opacity=.4;toast("Больше не предложу это вино");}
+  if(kind==="save"){const i=profile.saved.indexOf(sku);if(i<0){profile.saved.push(sku);btn.textContent="Сохранено";btn.classList.add("on");toast("Добавлено в «Мои вина»");}else{profile.saved.splice(i,1);btn.textContent="Сохранить";btn.classList.remove("on");}}
+  store.set("profile",profile);renderTaste();}
+$("composer").addEventListener("submit",e=>{e.preventDefault();const q=$("q");if(q.value.trim()){respond(q.value.trim());q.value="";}});
+function tasteHtml(){
+  const likes=Object.entries(profile.likes).sort((x,y)=>y[1]-x[1]).slice(0,8);
+  return `<div class="row sp"><h2>Мой вкус</h2><button class="btn t s" data-reset>Сбросить</button></div>
+  <div class="col" style="gap:4px"><div class="lbl"><span>Тело</span><span>${["","лёгкое","лёгкое","среднее","полное","мощное"][profile.body]}</span></div><input type="range" min="1" max="5" value="${profile.body}" data-p="body" aria-label="Тело"></div>
+  <div class="col" style="gap:4px"><div class="lbl"><span>Сладость</span><span>${SWEET_RU[profile.sweet]}</span></div><input type="range" min="0" max="3" value="${profile.sweet}" data-p="sweet" aria-label="Сладость"></div>
+  <div class="col" style="gap:4px"><div class="lbl"><span>Кислотность</span><span>${["","низкая","мягкая","средняя","яркая","высокая"][profile.acid]}</span></div><input type="range" min="1" max="5" value="${profile.acid}" data-p="acid" aria-label="Кислотность"></div>
+  <div class="col" style="gap:6px"><span class="lbl">Нравится</span><div class="row" style="gap:6px">${likes.length?likes.map(([k,v])=>`<span class="pill a">${esc(k.slice(2))}</span>`).join(""):'<span class="muted sm">Отмечайте вина кнопкой «Нравится»</span>'}</div></div>
+  ${profile.dislikes.length?`<div class="muted sm">Скрыто: ${profile.dislikes.length} ${plural(profile.dislikes.length,"вино","вина","вин")}</div>`:""}`;}
+function savedMini(){return `<div class="col" style="gap:8px"><span class="lbl">Сохранённые</span>${profile.saved.length?profile.saved.slice(-5).reverse().map(s=>{const w=BY_SKU[s];return `<div class="row sp sm" style="flex-wrap:nowrap"><span>${dot(w.color)} ${esc(w.name)}</span><span class="muted">${rub(w.price)}</span></div>`}).join(""):'<span class="muted sm">Пока пусто</span>'}</div>`;}
+function renderTaste(){$("sideTaste").innerHTML=`<div class="card col">${tasteHtml()}</div><div class="card">${savedMini()}</div>`;$("tasteCard").innerHTML=tasteHtml();renderSaved();}
+function renderSaved(){$("savedList").innerHTML=profile.saved.length?profile.saved.map(s=>wineCard(BY_SKU[s],[])).join(""):`<div class="card muted">Сохраняйте вина из подборок сомелье, они появятся здесь.</div>`;}
+document.addEventListener("input",e=>{const p=e.target.dataset?.p;if(p){profile[p]=+e.target.value;store.set("profile",profile);renderTaste();}});
+document.addEventListener("click",e=>{if(e.target.closest("[data-reset]")){profile=clone(DEF_PROFILE);store.set("profile",profile);renderTaste();toast("Профиль сброшен");}
+  const f=e.target.closest("#savedList [data-fb]");if(f)feedback(f.closest("[data-sku]").dataset.sku,f.dataset.fb,f);});
+function chatIntro(){log.innerHTML="";bubble(`Подберу российское вино из наличия. Расскажите, к какому блюду, для какого повода или какой бюджет.<div class="chips">${["К стейку до 2000 ₽","В подарок","Белое из Крыма к рыбе","Игристое на Новый год","Красностоп","Свидание, что-то лёгкое"].map(c=>`<button class="chip" data-chip="${c}">${c}</button>`).join("")}</div>`);}
+
+/* ================= ORGANIZER UI ================= */
+let picked=new Set(themePick("auto")), fMode="blind", fScale="criteria", fCrit=clone(SCALES.criteria.crit);
+function segInit(id,cb){$(id).addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;$(id).querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));cb(b.dataset.val);});}
+segInit("ev-mode",v=>{fMode=v;renderProgram();});
+segInit("ev-scale",v=>{fScale=v;$("critBox").hidden=v!=="criteria";});
+function renderCrit(){$("critEdit").innerHTML=fCrit.map((c,i)=>`<div class="row" style="flex-wrap:nowrap;gap:8px"><input value="${esc(c[1])}" data-ci="${i}" data-cf="name" aria-label="Критерий ${i+1}"><input type="number" min="1" max="100" value="${c[2]}" data-ci="${i}" data-cf="w" style="width:84px" aria-label="Вес"><button type="button" class="btn t s" data-cdel="${i}" aria-label="Удалить">✕</button></div>`).join("")+
+  `<div class="row sp"><button type="button" class="btn s" id="cadd">Добавить критерий</button><span class="sm">Сумма: ${fCrit.reduce((a,c)=>a+ +c[2],0)}</span></div>`;}
+$("critEdit").addEventListener("input",e=>{const i=e.target.dataset.ci;if(i==null)return;if(e.target.dataset.cf==="name")fCrit[i][1]=e.target.value;else{fCrit[i][2]=Math.max(1,+e.target.value||1);$("critEdit").querySelector(".row.sp .sm").textContent="Сумма: "+fCrit.reduce((a,c)=>a+ +c[2],0);}});
+$("critEdit").addEventListener("click",e=>{if(e.target.id==="cadd"){if(fCrit.length<8)fCrit.push(["c"+Date.now().toString(36),"Новый критерий",10]);renderCrit();}
+  const d=e.target.dataset.cdel;if(d!=null&&fCrit.length>1){fCrit.splice(+d,1);renderCrit();}});
+function renderPicker(){const q=($("ev-search").value||"").toLowerCase();
+  $("ev-wines").innerHTML=CATALOG.filter(w=>!q||(w.name+w.producer+w.region+w.grape.join()).toLowerCase().includes(q)).map(w=>`<label style="${w.stock?"":"opacity:.45;cursor:default"}"><input type="checkbox" value="${w.sku}" ${picked.has(w.sku)?"checked":""} ${w.stock?"":"disabled"}>${dot(w.color)}<span style="flex:1;min-width:0">${esc(w.name)} <span class="muted">${esc(w.producer)}</span></span><span class="muted sm">${w.stock?rub(w.price):"нет в наличии"}</span></label>`).join("");renderProgram();}
+function renderProgram(){const prog=buildProgram(picked);$("ev-count").textContent=picked.size+" "+plural(picked.size,"вино","вина","вин");
+  const t0=new Date($("ev-date").value||"2026-11-14T19:00");
+  $("ev-program").innerHTML=prog.length?`<table>${prog.map((s,i)=>{const w=BY_SKU[s];const t=new Date(t0.getTime()+(10+i*15)*60000);
+    return `<tr><td class="muted n" style="width:52px">${t.toTimeString().slice(0,5)}</td><td>${fMode==="blind"?`<b>Образец ${i+1}</b><div class="muted sm">${esc(w.name)}</div>`:`<b>${esc(w.name)}</b><div class="muted sm">${esc(w.producer)}</div>`}</td><td>${dot(w.color)}</td></tr>`}).join("")}<tr><td class="muted n">${new Date(t0.getTime()+(10+prog.length*15)*60000).toTimeString().slice(0,5)}</td><td colspan="2">${fMode==="blind"?"Раскрытие бутылок и итоги":"Итоги"}</td></tr></table>`:'<p class="muted sm">Выберите вина из каталога</p>';}
+$("ev-wines").addEventListener("change",e=>{if(e.target.checked)picked.add(e.target.value);else picked.delete(e.target.value);$("ev-theme").querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));renderProgram();$("ev-count").textContent=picked.size+" "+plural(picked.size,"вино","вина","вин");});
+$("ev-theme").addEventListener("click",e=>{const c=e.target.closest("[data-t]");if(!c)return;$("ev-theme").querySelectorAll(".chip").forEach(x=>x.classList.toggle("on",x===c&&c.dataset.t!=="none"));picked=new Set(themePick(c.dataset.t));renderPicker();});
+$("ev-search").addEventListener("input",renderPicker);$("ev-date").addEventListener("change",renderProgram);
+$("evForm").addEventListener("submit",e=>{e.preventDefault();
+  if(picked.size<2){toast("Выберите минимум два вина");return;}
+  const crit=fScale==="criteria"?fCrit.map((c,i)=>["k"+(i+1),c[1].trim()||"Критерий "+(i+1),+c[2]]):null;
+  const ev=createEvent({title:$("ev-name").value.trim()||"Дегустация",date:$("ev-date").value,cap:+$("ev-cap").value||24,mode:fMode,scale:fScale,crit,skus:[...picked]});
+  CUR=ev.code;store.set("cur",CUR);saveEvents();location.hash="event-"+ev.code;toast("Дегустация опубликована");});
+
+function renderEvents(){const list=Object.values(EVENTS).sort((a,b)=>b.created-a.created);
+  $("evList").innerHTML=list.length?list.map(ev=>{const s=summary(ev);return `<button class="card ev" data-open="${ev.code}">
+   <div class="row sp"><span class="pill ${ev.status==="live"?"ok":""}">${ev.status==="live"?"идёт":"завершена"}</span><span class="muted sm">${ev.mode==="blind"?"слепая":"открытая"}</span></div>
+   <h2>${esc(ev.title)}</h2><span class="muted sm">${fmtDate(ev.date)}</span>
+   <div class="row" style="gap:6px">${ev.program.map(s=>dot(BY_SKU[s].color)).join("")}</div>
+   <span class="sm">${ev.program.length} ${plural(ev.program.length,"вино","вина","вин")} · ${s.guests} ${plural(s.guests,"гость","гостя","гостей")} · ${s.valid.length} ${plural(s.valid.length,"оценка","оценки","оценок")}</span></button>`}).join(""):`<div class="card muted">Здесь появятся ваши дегустации.</div>`;}
+$("evList").addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(b)location.hash="event-"+b.dataset.open;});
+
+function renderEvent(c){const ev=EVENTS[c];const el=$("v-event");
+  if(!ev){el.innerHTML=`<div class="card muted">Дегустация не найдена. <a href="#events">К списку</a></div>`;return;}
+  CUR=c;store.set("cur",c);
+  const s=summary(ev);const excluded=ev.votes.length-s.valid.length;const maxAvg=Math.max(...s.rows.map(r=>r.avg),1);
+  const showNames=ev.revealed;
+  el.innerHTML=`
+  <div class="row sp"><div class="col" style="gap:2px"><a href="#events" class="muted sm" style="text-decoration:none">← Дегустации</a><h1>${esc(ev.title)}</h1><span class="muted sm">${fmtDate(ev.date)} · ${ev.mode==="blind"?"слепая":"открытая"} · ${esc(critOf(ev).length>1?"критерии · 100":SCALES[ev.scale].name)}</span></div>
+   <div class="row">${ev.mode==="blind"&&!ev.revealed?`<button class="btn p" data-a="reveal">Раскрыть бутылки</button>`:""}${ev.status==="live"?`<button class="btn" data-a="close">Завершить приём</button>`:`<span class="pill">приём завершён</span>`}${ev.published?`<span class="pill ok">итоги опубликованы</span>`:`<button class="btn" data-a="publish">Опубликовать итоги</button>`}</div></div>
+  <div class="stats">
+   <div class="card stat"><b>${s.guests}<span style="font-size:14px;color:var(--muted);font-weight:400"> / ${ev.cap}</span></b><span>участников</span></div>
+   <div class="card stat"><b>${s.valid.length}</b><span>валидных оценок</span></div>
+   <div class="card stat"><b style="color:var(--bad)">${s.rejected.length}</b><span>отклонено</span></div>
+   <div class="card stat"><b style="color:var(--warn)">${excluded}</b><span>исключено из рейтинга</span></div></div>
+  <div class="two">
+   <div class="card col"><div class="row sp"><h2>Рейтинг</h2>${!showNames?`<span class="pill a">бутылки скрыты</span>`:""}</div>
+    <div class="scroll"><table><tr><th class="n" style="width:30px">#</th><th>${showNames?"Вино":"Образец"}</th><th style="min-width:140px">Балл</th><th class="n">Оценок</th><th class="n">σ</th></tr>
+    ${[...s.rows].sort((a,b)=>a.rank-b.rank).map(r=>{const w=BY_SKU[r.sku];return `<tr><td class="n muted">${r.rank}</td><td>${showNames?`<b>${esc(w.name)}</b><div class="muted sm">${esc(w.producer)} · ${w.region}</div>`:`<b>Образец ${r.i+1}</b>`}</td><td><div class="row" style="flex-wrap:nowrap;gap:8px"><div class="bar"><i style="width:${r.avg/maxAvg*100}%"></i></div><b class="n" style="min-width:36px">${r.avg.toFixed(1)}</b></div></td><td class="n">${r.n}</td><td class="n muted">${r.sd.toFixed(1)}</td></tr>`}).join("")}</table></div>
+    ${notesHtml(ev,s)}
+   </div>
+   <div class="col">
+    <div class="card col" style="align-items:flex-start"><h2>Приглашение</h2>
+     <div class="row" style="align-items:flex-start;gap:16px"><div class="qr" id="qr"></div>
+      <div class="col" style="gap:6px;min-width:0;flex:1"><span class="muted sm">Код</span><b style="font-size:26px;letter-spacing:.12em">${ev.code}</b>
+      <div class="row"><button class="btn s" data-a="copy">Скопировать ссылку</button><a class="btn s" href="#join-${ev.code}" style="text-decoration:none">Открыть анкету</a></div>
+      <button class="btn t s" data-a="sim" style="padding-left:0">+ 12 демо-участников</button></div></div></div>
+    <div class="card col"><h2>Отклонённые оценки</h2>
+     ${s.rejected.length||s.straight.length?`<div class="scroll"><table>${s.rejected.slice(-12).reverse().map(r=>`<tr><td class="sm">${esc(ev.tokens[r.token]?.nick||"неизвестный")}</td><td class="sm muted">обр. ${ev.program.indexOf(r.sku)+1}</td><td><span class="pill bad">${esc(r.reason.join(", "))}</span></td></tr>`).join("")}
+     ${s.straight.map(t=>`<tr><td class="sm">${esc(ev.tokens[t]?.nick||t)}</td><td class="sm muted">все</td><td><span class="pill warn">одинаковый максимум, исключён</span></td></tr>`).join("")}</table></div>`:`<span class="muted sm">Нет</span>`}</div>
+    <div class="card col"><div class="row sp"><h2>Народный винный рейтинг</h2><span class="pill ${ev.mode==="blind"&&!ev.revealed?"":"ok"}">${s.valid.length} к передаче</span></div>
+     ${ev.mode==="blind"&&!ev.revealed?`<span class="muted sm">Передача доступна после раскрытия бутылок.</span>`:
+     `<div class="row"><button class="btn p s" data-a="send">${ev.sentNvr?"Передано "+fmtDate(ev.sentNvr):"Передать оценки"}</button><button class="btn s" data-a="copyjson">Скопировать JSON</button></div>
+      <details><summary class="sm">Пакет данных</summary><pre id="nvr">${esc(JSON.stringify(nvrPayload(ev),null,2))}</pre></details>`}</div>
+   </div></div>`;
+  const q=$("qr");try{new QRCode(q,{text:joinUrl(ev.code),width:132,height:132,colorDark:"#1f1a1c",colorLight:"#ffffff"});}catch(err){q.innerHTML=`<span style="color:#1f1a1c;line-height:1.3;font-size:12px">${ev.code}</span>`;}
+}
+function notesHtml(ev,s){const ns=s.valid.filter(v=>v.note).slice(-6).reverse();if(!ns.length)return"";
+  return `<div class="col" style="gap:6px"><span class="lbl">Заметки участников</span>${ns.map(v=>`<div class="sm"><span class="muted">${ev.revealed?esc(BY_SKU[v.sku].name):"Образец "+(ev.program.indexOf(v.sku)+1)}:</span> ${esc(v.note)}</div>`).join("")}</div>`;}
+$("v-event").addEventListener("click",e=>{const a=e.target.closest("[data-a]")?.dataset.a;if(!a)return;const ev=EVENTS[CUR];
+  if(a==="reveal"){ev.revealed=true;toast("Бутылки раскрыты для всех участников");}
+  if(a==="close"){ev.status="closed";toast("Приём оценок завершён");}
+  if(a==="publish"){if(ev.mode==="blind"&&!ev.revealed){toast("Сначала раскройте бутылки");return;}ev.published=true;ev.status="closed";toast("Итоги опубликованы");}
+  if(a==="sim"){simulate(ev,12,Math.floor(Math.random()*1e6)+1);toast("Добавлено 12 участников");}
+  if(a==="send"){ev.sentNvr=new Date().toISOString();toast("Передано оценок: "+summary(ev).valid.length);}
+  if(a==="copy"||a==="copyjson"){const t=a==="copy"?joinUrl(ev.code):JSON.stringify(nvrPayload(ev),null,2);
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast("Скопировано"),()=>toast(a==="copy"?t:"Не удалось скопировать"));return;}
+  saveEvents();renderEvent(ev.code);});
+
+/* ================= GUEST UI ================= */
+const opened={};
+function renderGuest(c){const app=$("guestApp");const ev=EVENTS[c];
+  if(!ev){app.innerHTML=`<div class="card col"><h1>Вход на дегустацию</h1><span class="muted">Отсканируйте QR-код или введите код события</span><form id="gCode" class="row" style="flex-wrap:nowrap"><input id="gc" placeholder="Например, K7QX2P" style="text-transform:uppercase"><button class="btn p">Войти</button></form></div>`;
+    $("gCode").onsubmit=e=>{e.preventDefault();const v=$("gc").value.trim().toUpperCase();if(EVENTS[v])location.hash="join-"+v;else toast("Код не найден");};return;}
+  const tk=store.get("tok."+c,null);const token=tk&&ev.tokens[tk]?tk:null;
+  if(!token){app.innerHTML=`<div class="card col"><span class="muted sm">${fmtDate(ev.date)}</span><h1>${esc(ev.title)}</h1>
+    <span class="muted">${ev.program.length} ${plural(ev.program.length,"вино","вина","вин")} · ${ev.mode==="blind"?"вслепую":"открыто"}</span>
+    <form id="gJoin" class="col"><label class="field">Ваше имя<input id="gnick" value="" placeholder="Как подписать в итогах" maxlength="30" required></label>
+    <label class="row sm" style="flex-wrap:nowrap;align-items:flex-start;gap:8px"><input type="checkbox" id="gok" style="width:auto;margin-top:3px;accent-color:var(--accent)">Мне есть 18 лет. Согласен, что мои оценки без имени попадут в Народный винный рейтинг</label>
+    <button class="btn p" style="padding:12px">Начать</button></form></div>`;
+    $("gJoin").onsubmit=e=>{e.preventDefault();if(!$("gok").checked){toast("Подтвердите возраст и согласие");return;}
+      try{const t=issueToken(ev,DEVICE,$("gnick").value.trim()||"Гость");store.set("tok."+c,t);saveEvents();renderGuest(c);}catch(err){toast(err.message);}};return;}
+  const cr=critOf(ev);const mine=ev.votes.filter(v=>v.token===token);const done=mine.length;
+  app.innerHTML=`<div class="row sp"><div><h1 style="font-size:19px">${esc(ev.title)}</h1><span class="muted sm">${esc(ev.tokens[token].nick)} · ${done} из ${ev.program.length}</span></div><span class="pill ${ev.status==="live"?"ok":""}">${ev.status==="live"?"идёт":"завершена"}</span></div>
+   <div class="bar" style="flex:none"><i style="width:${done/ev.program.length*100}%"></i></div>
+   ${ev.published?resultsForGuest(ev):""}
+   ${ev.program.map((sku,i)=>{const w=BY_SKU[sku];const v=mine.find(x=>x.sku===sku);
+    const title=ev.revealed?`${esc(w.name)}<div class="muted sm" style="font-weight:400">${esc(w.producer)} · ${w.region} · ${COLOR_RU[w.color]}</div>`:`Образец ${i+1}`;
+    return `<div class="card smp" data-s="${sku}"><div class="row sp" style="align-items:flex-start;flex-wrap:nowrap"><b>${title}</b>${v?`<span class="pill ok">${v.score}</span>`:""}</div>
+    ${v?(v.note?`<span class="muted sm">${esc(v.note)}</span>`:"")+`<button class="btn t s" data-again style="align-self:flex-start;padding-left:0">Изменить оценку</button>`:ev.status!=="live"?`<span class="muted sm">Приём оценок завершён</span>`:
+     (cr.length===1&&cr[0][2]<=10?`<div class="stars" data-one="${cr[0][0]}">${Array.from({length:cr[0][2]},(_,k)=>`<button type="button" data-n="${k+1}">${k+1}</button>`).join("")}</div>`:
+     cr.map(c=>`<div class="cr"><span>${esc(c[1])}</span><input type="range" min="0" max="${c[2]}" value="${Math.round(c[2]*.7)}" data-c="${c[0]}" aria-label="${esc(c[1])}"><output>${Math.round(c[2]*.7)}</output></div>`).join(""))+
+     `<div class="chips" style="margin:0">${["фрукты","ягоды","цветы","специи","дуб","минеральность"].map(x=>`<button type="button" class="chip" data-aroma>${x}</button>`).join("")}</div>
+     <textarea rows="2" placeholder="Заметка" data-note></textarea><button class="btn p" data-vote>Сохранить оценку</button>`}</div>`}).join("")}
+   <a href="#events" class="muted sm" style="text-align:center">Кабинет организатора</a>`;
+  ev.program.forEach(s=>{opened[s]=opened[s]||Date.now();});
+  app.querySelectorAll('input[type=range]').forEach(r=>r.oninput=()=>r.nextElementSibling.value=r.value);
+  app.querySelectorAll('[data-aroma]').forEach(b=>b.onclick=()=>b.classList.toggle("on"));
+  app.querySelectorAll('.stars').forEach(st=>st.onclick=e=>{const b=e.target.closest("button");if(!b)return;st.dataset.val=b.dataset.n;st.querySelectorAll("button").forEach(x=>x.classList.toggle("on",+x.dataset.n<=+b.dataset.n));});
+  app.querySelectorAll('[data-vote]').forEach(b=>b.onclick=()=>{const box=b.closest("[data-s]");const sku=box.dataset.s;const scores={};
+    box.querySelectorAll("[data-c]").forEach(r=>scores[r.dataset.c]=+r.value);
+    const st=box.querySelector(".stars");if(st){if(!st.dataset.val){toast("Поставьте оценку");return;}scores[st.dataset.one]=+st.dataset.val;}
+    const ar=[...box.querySelectorAll("[data-aroma].on")].map(x=>x.textContent);const note=[box.querySelector("[data-note]").value.trim(),ar.join(", ")].filter(Boolean).join(" · ");
+    const elapsed=(Date.now()-opened[sku])/1000*10+1;
+    const r=castVote(ev,token,sku,scores,note,elapsed);saveEvents();toast(r.ok?"Оценка сохранена":"Не принято: "+r.reason.join(", "));renderGuest(c);});
+  app.querySelectorAll('[data-again]').forEach(b=>b.onclick=()=>{const sku=b.closest("[data-s]").dataset.s;const full=Object.fromEntries(cr.map(c=>[c[0],c[2]]));
+    const r=castVote(ev,token,sku,full,"",60);saveEvents();toast(r.ok?"Сохранено":"Не принято: "+r.reason.join(", "));renderGuest(c);});
+}
+function resultsForGuest(ev){const s=summary(ev);return `<div class="card col"><h2>Итоги</h2>${[...s.rows].sort((a,b)=>a.rank-b.rank).slice(0,5).map(r=>`<div class="row sp sm" style="flex-wrap:nowrap"><span>${r.rank}. ${esc(BY_SKU[r.sku].name)}</span><b>${r.avg.toFixed(1)}</b></div>`).join("")}</div>`;}
+
+/* ================= ROUTER ================= */
+const VIEWS=["chat","saved","events","new","event","guest","tests"];
+function route(){let h=(location.hash||"#chat").slice(1);let arg=null;
+  if(h.startsWith("join-")){arg=h.slice(5).toUpperCase();h="guest";}
+  else if(h.startsWith("event-")){arg=h.slice(6).toUpperCase();h="event";}
+  if(!VIEWS.includes(h))h="chat";
+  VIEWS.forEach(v=>$("v-"+v).hidden=v!==h);
+  $("top").hidden=h==="guest";
+  const tab={new:"events",event:"events"}[h]||h;
+  document.querySelectorAll("#nav a").forEach(a=>a.classList.toggle("on",a.dataset.v===tab));
+  if(h==="guest")renderGuest(arg||"");if(h==="events")renderEvents();if(h==="event")renderEvent(arg);if(h==="new"){renderCrit();renderPicker();}
+  if(h==="saved")renderTaste();if(h==="tests")runTests();
+  if(h!=="chat")window.scrollTo&&window.scrollTo(0,0);}
+addEventListener("hashchange",route);
+$("runTests").addEventListener("click",()=>{runTests();toast("Готово");});
+addEventListener("storage",e=>{if(e.key==="sv.events"){EVENTS=store.get("events",{});route();}});
+
+/* boot */
+if(!Object.keys(EVENTS).length){const ev=createEvent({title:"Автохтоны Дона и Крыма",date:"2026-11-14T19:00",cap:24,mode:"blind",scale:"criteria",skus:themePick("auto")});simulate(ev,12,42);saveEvents();}
+chatIntro();renderTaste();route();
+
+/* ============ TESTS ============ */
+function runTests(){
+  const T=[];const t=(group,name,fn)=>{let ok,detail;try{const r=fn();ok=r===true||(r&&r.ok);detail=r&&r.detail||"";}catch(e){ok=false;detail=e.message;}T.push({group,name,ok,detail});};
+  const rec=(q,prof=DEF_PROFILE)=>{const s=parse(q,{budgetAsked:true});const res=retrieve(s,clone(prof));return {s,res,top:guard(llmSelect(res),res).ok.map(p=>BY_SKU[p.sku])};};
+  // Accuracy
+  t("Точность","«К стейку до 2000 ₽»: только красные к мясу, все дешевле 2000",()=>{const {top}=rec("к стейку до 2000");return {ok:top.length>0&&top.every(w=>w.price<=2000&&w.pair.some(p=>p==="мясо"||p==="шашлык")),detail:top.map(w=>w.name+" "+w.price).join(", ")};});
+  t("Точность","Регион: «белое из Крыма» возвращает только Крым и белые",()=>{const {top}=rec("белое из крыма к рыбе");return {ok:top.length>0&&top.every(w=>w.region==="Крым"&&w.color==="white"),detail:top.map(w=>w.name).join(", ")};});
+  t("Точность","Сорт: «красностоп» находит Красностоп Золотовский",()=>{const {top}=rec("хочу красностоп");return {ok:top[0]?.grape.includes("Красностоп Золотовский"),detail:top[0]?.name};});
+  t("Точность","Игристое на Новый год: только игристые",()=>{const {top}=rec("игристое на новый год");return {ok:top.length>0&&top.every(w=>w.color==="spark"),detail:top.map(w=>w.name).join(", ")};});
+  t("Точность","Подарок до 5000 ₽: топ-1 не дешевле 2000 ₽",()=>{const {top}=rec("подарок до 5000");return {ok:top[0]&&top[0].price>=2000&&top[0].price<=5000,detail:top[0]?.name+" "+top[0]?.price};});
+  t("Точность","Десерт: десертное или полусладкое",()=>{const {top}=rec("к десерту");return {ok:top[0]&&top[0].pair.includes("десерт"),detail:top[0]?.name};});
+  t("Точность","Бюджет «до 1,5 тыс» парсится как 1500 ₽",()=>{const s=parse("красное до 1,5 тыс");return {ok:s.max===1500&&s.color==="red",detail:JSON.stringify({max:s.max,color:s.color})};});
+  t("Точность","Профиль: лайк Пино Нуар поднимает Пино Нуар в выдаче «к утке»",()=>{const p=clone(DEF_PROFILE);p.likes["g:Пино Нуар"]=3;const {top}=rec("к утке",p);return {ok:top[0]?.grape.includes("Пино Нуар"),detail:top[0]?.name};});
+  t("Точность","«Не то» убирает вино из следующих выдач",()=>{const p=clone(DEF_PROFILE);const first=rec("к стейку до 2000").top[0];p.dislikes=[first.sku];const {top}=rec("к стейку до 2000",p);return {ok:!top.some(w=>w.sku===first.sku),detail:"исключено: "+first.name};});
+  // Golden set precision@3
+  const GOLD=[["к рыбе","рыба"],["к шашлыку","шашлык"],["к утке","утка"],["к сыру","сыр"],["к морепродуктам","морепродукты"],["к пицце","пицца"],["к пасте","паста"],["к грибам","грибы"]];
+  t("Точность","Precision@3 по золотому набору пар (8 блюд) ≥ 0.9",()=>{let hit=0,all=0;for(const [q,tag] of GOLD){const {top}=rec(q);top.forEach(w=>{all++;if(w.pair.includes(tag)||(tag==="шашлык"&&w.pair.includes("мясо")))hit++;});}const p=hit/all;return {ok:p>=0.9,detail:`P@3 = ${p.toFixed(2)} (${hit}/${all})`};});
+  // Hallucination
+  t("Без выдумок","Все рекомендации на 200 случайных запросах существуют в каталоге",()=>{const qs=["к стейку","подарок","белое","крым","дон","игристое","до 900","к рыбе до 1200","сладкое","автохтон","свидание","к утке до 5000"];let bad=0,n=0;for(let i=0;i<200;i++){const q=qs[i%qs.length]+" "+qs[(i*7)%qs.length];const {top}=rec(q);top.forEach(w=>{n++;if(!BY_SKU[w.sku])bad++;});}return {ok:bad===0,detail:`${n} рекомендаций, выдуманных: ${bad}`};});
+  t("Без выдумок","Нет в наличии: SV-0023 никогда не рекомендуется",()=>{const {top,res}=rec("пино нуар к утке");return {ok:!res.items.some(r=>r.w.sku==="SV-0023"),detail:top.map(w=>w.sku).join(", ")};});
+  t("Без выдумок","Валидатор отбрасывает SKU, которого нет в каталоге",()=>{const res=retrieve(parse("к стейку",{}));const g=guard([{sku:"SV-9999"},{sku:res.items[0].w.sku}],res);return {ok:g.rejected.length===1&&g.ok.length===1,detail:"отброшено: SV-9999"};});
+  t("Без выдумок","Валидатор отбрасывает реальный SKU, не прошедший фильтры запроса",()=>{const res=retrieve(parse("белое из крыма",{budgetAsked:true}));const g=guard([{sku:"SV-0006"}],res);return {ok:g.rejected.length===1,detail:"SV-0006 (красное, Кубань) отклонено"};});
+  t("Без выдумок","Пустая выдача: «игристое из Дона до 500 ₽» не выдумывает вино",()=>{const {top}=rec("игристое с дона до 500");return {ok:top.length===0,detail:"рекомендаций: "+top.length};});
+  t("Без выдумок","Цена в карточке ответа совпадает с каталогом",()=>{const res=retrieve(parse("к стейку",{budgetAsked:true}));const html=wineCard(res.items[0].w,[]);return {ok:html.includes(rub(BY_SKU[res.items[0].w.sku].price)),detail:res.items[0].w.sku};});
+  t("Диалог","Без контекста ассистент задаёт уточняющий вопрос",()=>{const q=nextQuestion(parse("посоветуй вино"));return {ok:q&&q.key==="intent",detail:q?.text};});
+  t("Диалог","Подарок без бюджета: вопрос о бюджете",()=>{const q=nextQuestion(parse("нужен подарок"));return {ok:q&&q.key==="budget",detail:q?.text};});
+  // Tasting
+  const mk=(mode="blind")=>createEvent({title:"Тест",date:"",cap:30,mode,scale:"criteria",skus:["SV-0001","SV-0009","SV-0003","SV-0021"]});
+  t("Дегустации","Программа: игристое → белое → красное → десертное",()=>{const ev=mk();delete EVENTS[ev.code];return {ok:ev.program.map(s=>BY_SKU[s].color).join()==="spark,white,red,dessert",detail:ev.program.join(" → ")};});
+  t("Дегустации","Повторный голос за тот же образец отклоняется",()=>{const ev=mk();const tk=issueToken(ev,"d1","A");const sc={look:8,nose:20,palate:30,finish:15};castVote(ev,tk,ev.program[0],sc,"",30);const r=castVote(ev,tk,ev.program[0],sc,"",30);delete EVENTS[ev.code];return {ok:!r.ok&&ev.votes.length===1,detail:r.reason?.join("; ")};});
+  t("Дегустации","Повторный вход с того же устройства даёт тот же токен",()=>{const ev=mk();const a=issueToken(ev,"d1","A"),b=issueToken(ev,"d1","B");delete EVENTS[ev.code];return {ok:a===b,detail:a};});
+  t("Дегустации","Поддельный токен и голос быстрее 20 с отклоняются",()=>{const ev=mk();const tk=issueToken(ev,"d1","A");const sc={look:8,nose:20,palate:30,finish:15};const r1=castVote(ev,"tk-fake",ev.program[0],sc,"",30),r2=castVote(ev,tk,ev.program[1],sc,"",3);delete EVENTS[ev.code];return {ok:!r1.ok&&!r2.ok,detail:[...r1.reason,...r2.reason].join("; ")};});
+  t("Дегустации","«Прямая линия» из максимумов исключается из рейтинга",()=>{const ev=mk();const tk=issueToken(ev,"d1","A");ev.program.forEach(s=>castVote(ev,tk,s,{look:10,nose:30,palate:40,finish:20},"",30));const n=validVotes(ev).length;delete EVENTS[ev.code];return {ok:n===0,detail:"валидных: "+n};});
+  t("Дегустации","Нормализация шкал к 100: 4/5 звёзд = 80, критерии 8+24+32+16 = 80",()=>{const ev=mk();const a=score100({scale:"stars"},{overall:4}),b=score100(ev,{look:8,nose:24,palate:32,finish:16});delete EVENTS[ev.code];return {ok:a===80&&b===80,detail:a+" и "+b};});
+  t("Дегустации","Выгрузка в НВР содержит только валидные оценки и без имён",()=>{const ev=mk("open");simulate(ev,10,3);const p=nvrPayload(ev);const ok=p.ratings.length===validVotes(ev).length&&!JSON.stringify(p).includes("Гость");delete EVENTS[ev.code];return {ok,detail:`${p.ratings.length} оценок, отклонено ${ev.rejected.length}`};});
+  t("Дегустации","Голоса после закрытия приёма не принимаются",()=>{const ev=mk();const tk=issueToken(ev,"d1","A");ev.status="closed";const r=castVote(ev,tk,ev.program[0],{look:8,nose:20,palate:30,finish:15},"",30);delete EVENTS[ev.code];return {ok:!r.ok,detail:r.reason?.join("; ")};});
+  const passed=T.filter(x=>x.ok).length;
+  document.getElementById("k-tests").textContent=passed+"/"+T.length;
+  const groups=[...new Set(T.map(x=>x.group))];
+  document.getElementById("testOut").innerHTML=`<div class="row" style="margin-bottom:8px"><span class="tag ${passed===T.length?"ok":"bad"}" style="font-size:14px">${passed} из ${T.length} пройдено</span></div>`+
+   groups.map(g=>`<h3 style="margin:16px 0 4px">${g}</h3>`+T.filter(x=>x.group===g).map(x=>`<div class="test"><span class="tag ${x.ok?"ok":"bad"}">${x.ok?"пройден":"провал"}</span><div><div>${esc(x.name)}</div>${x.detail?`<div class="mono muted">${esc(x.detail)}</div>`:""}</div></div>`).join("")).join("");
+  return T;
+}
+
+</script>
+</body>
+</html>
